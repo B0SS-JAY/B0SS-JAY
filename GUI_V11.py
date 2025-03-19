@@ -50,19 +50,25 @@ class MainWindow(QMainWindow): #Main Window
             border: 2px solid black;  /* Border color and thickness */
         """)
 
-        # Digital Clock Label (Top Left)
+       # Digital Clock Label (Top Left)
         self.clock_label = QLabel(self)
         self.clock_label.setFont(QFont("DS Digital", 27, QFont.Bold))
-        self.clock_label.setStyleSheet("color: black;")
+        self.clock_label.setStyleSheet("""
+            color: white;
+            background-color: #333;
+            border: 2px solid #555;
+            border-radius: 10px;
+            padding: 5px;
+        """)
         self.clock_label.setAlignment(Qt.AlignCenter)
-        self.clock_label.setFixedSize(210, 50)
-        self.clock_label.move(30, 20)  # Position in the top-left corner
+        self.clock_label.setFixedSize(230, 60)
+        self.clock_label.move(20, 20)  # Position in the top-left corner
 
         # Start the clock update timer
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_time)
         self.timer.start(1000)  # Update every second
-        self.update_time()  #
+        self.update_time()  # Update the clock immediately
 
         # Table setup
         layout = QVBoxLayout(bg_widget)
@@ -77,57 +83,122 @@ class MainWindow(QMainWindow): #Main Window
 
         # TOTAL BATTERY AVAILABLE
         self.battery_available = QLabel("TOTAL BATTERY \nAVAILABLE", self)
-        self.battery_available.setFont(QFont("Arial", 17, QFont.Bold))
-        self.battery_available.setStyleSheet("color: black;")
+        self.battery_available.setFont(QFont("Arial", 15, QFont.Bold))
+        self.battery_available.setStyleSheet("""
+            color: black;
+            background-color: #f0f0f0;
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+        """)
         self.battery_available.setAlignment(Qt.AlignCenter)
-        self.battery_available.setFixedSize(250, 800)  # Reduce height to fit text only
-        self.battery_available.move(15, 10)
+        self.battery_available.setFixedSize(250, 100)  # Adjust height to fit text only
+        self.battery_available.move(15, 360)
         self.battery_available.raise_()
 
         # TOTAL BATTERY AVAILABLE DISPLAY
         self.available_display = QLabel("1", self)
         self.available_display.setFont(QFont("Arial", 50, QFont.Bold))
-        self.available_display.setStyleSheet("color: black;")
+        self.available_display.setStyleSheet("""
+            color: black;
+            background-color: #e0e0e0;
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+        """)
         self.available_display.setAlignment(Qt.AlignCenter)
-        self.available_display.setFixedSize(250, 800)  # Reduce height to fit text only
-        self.available_display.move(15, 90)
+        self.available_display.setFixedSize(250, 100)  # Adjust height to fit text only
+        self.available_display.move(15, 470)
         self.available_display.raise_()
+
 
         # TOTAL BATTERY CHARGING
         self.battery_charging = QLabel("TOTAL BATTERY \nCHARGING", self)
-        self.battery_charging.setFont(QFont("Arial", 17, QFont.Bold))
-        self.battery_charging.setStyleSheet("color: black;")
+        self.battery_charging.setFont(QFont("Arial", 15, QFont.Bold))
+        self.battery_charging.setStyleSheet("""
+            color: black;
+            background-color: #f0f0f0;
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+        """)
         self.battery_charging.setAlignment(Qt.AlignCenter)
-        self.battery_charging.setFixedSize(250, 800)  # Reduce height to fit text only
-        self.battery_charging.move(15, 200)
+        self.battery_charging.setFixedSize(250, 100)  # Adjust height to fit text only
+        self.battery_charging.move(15, 590)
         self.battery_charging.raise_()
 
-         # TOTAL BATTERY CHARGING DISPLAY
+        # TOTAL BATTERY CHARGING DISPLAY
         self.charging_display = QLabel("2", self)
         self.charging_display.setFont(QFont("Arial", 50, QFont.Bold))
-        self.charging_display.setStyleSheet("color: black;")
+        self.charging_display.setStyleSheet("""
+            color: black;
+            background-color: #e0e0e0;
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+        """)
         self.charging_display.setAlignment(Qt.AlignCenter)
-        self.charging_display.setFixedSize(250, 800)  # Reduce height to fit text only
-        self.charging_display.move(15, 280)
+        self.charging_display.setFixedSize(250, 100)  # Adjust height to fit text only
+        self.charging_display.move(15, 700)
         self.charging_display.raise_()
+
 
         # TOTAL EMPTY BATTERY DOCK
         self.battery_dock = QLabel("EMPTY BATTERY \nDOCK", self)
-        self.battery_dock.setFont(QFont("Arial", 17, QFont.Bold))
-        self.battery_dock.setStyleSheet("color: black;")
+        self.battery_dock.setFont(QFont("Arial", 15, QFont.Bold))
+        self.battery_dock.setStyleSheet("""
+            color: black;
+            background-color: #f0f0f0;
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+        """)
         self.battery_dock.setAlignment(Qt.AlignCenter)
-        self.battery_dock.setFixedSize(250, 800)  # Reduce height to fit text only
-        self.battery_dock.move(15, 370)
+        self.battery_dock.setFixedSize(250, 100)  # Adjust height to fit text only
+        self.battery_dock.move(15, 820)
         self.battery_dock.raise_()
 
-        #BATTERY DOCK DISPLAY
+        # BATTERY DOCK DISPLAY
         self.dock_display = QLabel("2", self)
         self.dock_display.setFont(QFont("Arial", 50, QFont.Bold))
-        self.dock_display.setStyleSheet("color: black;")
+        self.dock_display.setStyleSheet("""
+            color: black;
+            background-color: #e0e0e0;
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+        """)
         self.dock_display.setAlignment(Qt.AlignCenter)
-        self.dock_display.setFixedSize(250, 800)  # Reduce height to fit text only
-        self.dock_display.move(15, 450)
+        self.dock_display.setFixedSize(250, 100)  # Adjust height to fit text only
+        self.dock_display.move(15, 930)
         self.dock_display.raise_()
+
+        # Line between TOTAL EMPTY BATTERY DOCK and BATTERY DOCK DISPLAY
+        self.line_dock = QFrame(self)
+        self.line_dock.setFrameShape(QFrame.HLine)
+        self.line_dock.setFrameShadow(QFrame.Sunken)
+        self.line_dock.setStyleSheet("background-color: black;")
+        self.line_dock.setGeometry(15, 580, 250, 3)  # Adjust position and size of the line
+
+        # Line
+        self.line_dock = QFrame(self)
+        self.line_dock.setFrameShape(QFrame.HLine)
+        self.line_dock.setFrameShadow(QFrame.Sunken)
+        self.line_dock.setStyleSheet("background-color: black;")
+        self.line_dock.setGeometry(15, 580, 250, 3)  # Adjust position and size of the line
+
+        # Line 
+        self.line_dock = QFrame(self)
+        self.line_dock.setFrameShape(QFrame.HLine)
+        self.line_dock.setFrameShadow(QFrame.Sunken)
+        self.line_dock.setStyleSheet("background-color: black;")
+        self.line_dock.setGeometry(15, 810, 250, 3)  # Adjust position and size of the line
 
         # Add Image (Clickable)
         self.battery_image = QLabel(self)
@@ -301,14 +372,14 @@ class MainWindow(QMainWindow): #Main Window
 
     def cell_clicked(self, row, column):
             """ Open a new window when a DOCK is clicked and hide MainWindow """
-            if column == 1:  # Ensure the clicked column is 'Battery Dock'
+            if column == 1:  
                 item = self.table_widget.item(row, column)
                 if item:
-                    BP_ID = item.text()  # Get the dock name (e.g., "DOCK 1")
-                    if BP_ID in ["BP01", "BP02", "BP03", "BP04"]:  # Check valid docks
+                    BP_ID = item.text()  
+                    if BP_ID in ["BP01", "BP02", "BP03", "BP04"]:  
                         self.hide()  # Hide the main window
-                        self.dock_window = DockWindow(BP_ID, self)  # Open dynamic dock window
-                        self.dock_window.exec_()  # Open as modal dialog
+                        self.ID_window = IDWindow(BP_ID, self)  
+                        self.ID_window.exec_()  # Open as modal dialog
 
 
 app = QApplication([])
