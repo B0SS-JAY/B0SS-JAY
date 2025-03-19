@@ -2,6 +2,40 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
+
+def setup_logos(parent):
+    # CSU LOGO
+    csu_logo = QLabel(parent)
+    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\csulogo.png")
+    csu_logo.setPixmap(pixmap)
+    csu_logo.setScaledContents(True)
+    csu_logo.setFixedSize(100, 100)  # Set exact size
+    csu_logo.move(1155, 935)  # Center it below the text
+
+    # PCIEERD LOGO
+    pcieerd_logo = QLabel(parent)
+    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\PCIEERD.png")
+    pcieerd_logo.setPixmap(pixmap)
+    pcieerd_logo.setScaledContents(True)
+    pcieerd_logo.setFixedSize(100, 100)  # Set exact size
+    pcieerd_logo.move(850, 935)  # Center it below the text
+
+    # NICER LOGO
+    nicer_logo = QLabel(parent)
+    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\NICER.png")
+    nicer_logo.setPixmap(pixmap)
+    nicer_logo.setScaledContents(True)
+    nicer_logo.setFixedSize(230, 100)  # Set exact size
+    nicer_logo.move(950, 935)  # Center it below the text
+
+    # EMRDC LOGO
+    emrdc_logo = QLabel(parent)
+    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\EMRDC.png")
+    emrdc_logo.setPixmap(pixmap)
+    emrdc_logo.setScaledContents(True)
+    emrdc_logo.setFixedSize(130, 130)  # Set exact size
+    emrdc_logo.move(1250, 920)  # Center it below the text
+
 class AddBatteryWindow(QDialog):  # Add battery Window
     def __init__(self, main_window):
         super().__init__()
@@ -17,6 +51,8 @@ class AddBatteryWindow(QDialog):  # Add battery Window
             border: 2px solid black;  /* Border color and thickness */
         """)
 
+        setup_logos(self) #Call the Logos
+        
         # Text inside the background
         layout = QVBoxLayout(bg_widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -129,6 +165,8 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
             border: 2px solid black;  /* Border color and thickness */
         """)
 
+        setup_logos(self) #Call the Logos
+
         # Text inside the background
         layout = QVBoxLayout(bg_widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -170,6 +208,20 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         self.timer.start(1000)  # Update every second
         self.update_time()  # Update the clock immediately
 
+        # Battery ID ComboBox
+        self.battery_id_combo = QComboBox(self)
+        self.battery_id_combo.setFont(QFont("Arial", 20))
+        self.battery_id_combo.setFixedSize(400, 50)
+        self.battery_id_combo.move(560, 300)
+        self.battery_id_combo.addItems(["BP01", "BP02", "BP03", "BP04", "BP05", "BP06"])  # Add battery IDs
+
+        # Delete Button
+        self.delete_button = QPushButton("Delete Battery", self)
+        self.delete_button.setFont(QFont("Arial", 20))
+        self.delete_button.setFixedSize(300, 50)
+        self.delete_button.move(620, 400)
+        self.delete_button.clicked.connect(self.delete_battery)
+
         # ✅ Return Button with Home Icon and Text
         self.close_button = QPushButton(self)
         self.close_button.setIcon(QIcon(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\home.png"))  # Set the path to your home icon
@@ -183,6 +235,13 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         self.close_button.setCursor(Qt.PointingHandCursor)
         self.close_button.clicked.connect(self.close_window)
 
+         # Total Batteries Label
+        self.total_batteries_label = QLabel(self)
+        self.total_batteries_label.setFont(QFont("Arial", 30, QFont.Bold))
+        self.total_batteries_label.setFixedSize(500, 500)
+        self.total_batteries_label.move(1060, 120)
+        self.update_total_batteries()
+
     def update_time(self):
         """ Updates the digital clock every second. """
         current_time = QTime.currentTime().toString("hh:mm:ss")
@@ -191,7 +250,31 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
     def close_window(self):
         """ Close this window and show the main window again """
         self.close()
-        self.main_window.show() 
+        self.main_window.show()
+
+    def delete_battery(self):
+        """ Delete the battery with the selected ID """
+        battery_id = self.battery_id_combo.currentText()
+        if battery_id:
+            # Show a confirmation dialog
+            reply = QMessageBox.question(self, 'Confirm Deletion',
+                                         f"Are you sure you want to delete battery with ID {battery_id}?",
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                # Implement the logic to delete the battery with the given ID
+                # For example, you can remove the battery from a list or database
+                print(f"Deleting battery with ID: {battery_id}")
+                # Show a message box to confirm deletion
+                QMessageBox.information(self, "Battery Deleted", f"Battery with ID {battery_id} has been deleted.")
+            else:
+                print("Deletion cancelled.")
+        else:
+            QMessageBox.warning(self, "Input Error", "Please select a valid Battery ID.")
+
+    def update_total_batteries(self):
+            """ Update the total number of batteries label """
+            total_batteries = self.battery_id_combo.count()
+            self.total_batteries_label.setText(f"TOTAL NUMBER \nOF BATTERIES\n              {total_batteries}")
 
 class IDWindow(QDialog):  # Generic Dock Window for all docks
     def __init__(self, BP_ID, main_window):

@@ -3,6 +3,39 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from add_battery_window import *  # Import the AddBatteryWindow
 
+# Define the setup_logos function
+def setup_logos(parent):
+    # CSU LOGO
+    csu_logo = QLabel(parent)
+    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\csulogo.png")
+    csu_logo.setPixmap(pixmap)
+    csu_logo.setScaledContents(True)
+    csu_logo.setFixedSize(100, 100)  # Set exact size
+    csu_logo.move(1155, 935)  # Center it below the text
+
+    # PCIEERD LOGO
+    pcieerd_logo = QLabel(parent)
+    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\PCIEERD.png")
+    pcieerd_logo.setPixmap(pixmap)
+    pcieerd_logo.setScaledContents(True)
+    pcieerd_logo.setFixedSize(100, 100)  # Set exact size
+    pcieerd_logo.move(850, 935)  # Center it below the text
+
+    # NICER LOGO
+    nicer_logo = QLabel(parent)
+    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\NICER.png")
+    nicer_logo.setPixmap(pixmap)
+    nicer_logo.setScaledContents(True)
+    nicer_logo.setFixedSize(230, 100)  # Set exact size
+    nicer_logo.move(950, 935)  # Center it below the text
+
+    # EMRDC LOGO
+    emrdc_logo = QLabel(parent)
+    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\EMRDC.png")
+    emrdc_logo.setPixmap(pixmap)
+    emrdc_logo.setScaledContents(True)
+    emrdc_logo.setFixedSize(130, 130)  # Set exact size
+    emrdc_logo.move(1250, 920)  # Center it below the text
 
 class MainWindow(QMainWindow): #Main Window
     def __init__(self):
@@ -249,39 +282,8 @@ class MainWindow(QMainWindow): #Main Window
         self.remove_image.setCursor(Qt.PointingHandCursor)  # Make it show a clickable cursor
         self.remove_image.mousePressEvent = self.remove_battery_clicked  # Assign event
 
-        # CSU LOGO
-        self.CSU_LOGO = QLabel(self)
-        pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\csulogo.png")
-        self.CSU_LOGO.setPixmap(pixmap)
-        self.CSU_LOGO.setScaledContents(True)
-        self.CSU_LOGO.setFixedSize(100, 100)   # Set exact size
-        self.CSU_LOGO.move(1155, 935)  # Center it below the text
-
-        # PCIEERD LOGO
-        self.CSU_LOGO = QLabel(self)
-        pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\PCIEERD.png")
-        self.CSU_LOGO.setPixmap(pixmap)
-        self.CSU_LOGO.setScaledContents(True)
-        self.CSU_LOGO.setFixedSize(100, 100)   # Set exact size
-        self.CSU_LOGO.move(850, 935)  # Center it below the text
-
-        # NICER LOGO
-        self.CSU_LOGO = QLabel(self)
-        pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\NICER.png")
-        self.CSU_LOGO.setPixmap(pixmap)
-        self.CSU_LOGO.setScaledContents(True)
-        self.CSU_LOGO.setFixedSize(230, 100)   # Set exact size
-        self.CSU_LOGO.move(950, 935)  # Center it below the text
-
-        # EMRDC LOGO
-        self.CSU_LOGO = QLabel(self)
-        pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\EMRDC.png")
-        self.CSU_LOGO.setPixmap(pixmap)
-        self.CSU_LOGO.setScaledContents(True)
-        self.CSU_LOGO.setFixedSize(130, 130)   # Set exact size
-        self.CSU_LOGO.move(1250, 920)  # Center it below the text
+        setup_logos(self)
         
-
     def add_battery_clicked(self, event):
         self.hide()  # Hide main window instead of closing it
         self.add_battery_window = AddBatteryWindow(self)  # Pass reference to main window
