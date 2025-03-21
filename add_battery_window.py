@@ -40,24 +40,27 @@ class OnScreenKeyboard(QWidget):
     def __init__(self, target_input, parent=None):
         super().__init__(parent)
         self.target_input = target_input
-        self.border = 10
-        self.border_color = "#333"
         self.init_ui()
 
     def init_ui(self):
         self.setWindowTitle("On-Screen Keyboard")
-        self.setFixedSize(1400, 450)
-        self.setWindowFlags(Qt.Popup | Qt.WindowStaysOnTopHint)  # Set as popup and always on top
+        self.setFixedSize(1550, 450)
+        self.setWindowFlags(Qt.Popup | Qt.WindowStaysOnTopHint)
 
-        # Set the border color and style for the entire widget
-        self.setStyleSheet(f"""
-            QWidget {{
-                border: {self.border}px solid {self.border_color};  # Set the border color and thickness
-                border-radius: 10px;  # Optional: Add rounded corners
-            }}
+        # Create a QFrame as the container
+        frame = QFrame(self)
+        frame.setStyleSheet("""
+            QFrame {
+                 background-color: rgb(188, 199, 230);
+                 border: 2px solid black;  /* Border color and thickness */
+            }
         """)
+        frame.setGeometry(0, 0, 1550, 450)  # Match widget size
 
-        layout = QGridLayout()
+        layout = QGridLayout(frame)  # Apply layout to the frame
+        self.setLayout(layout)
+
+        # Add buttons here as before...
 
         buttons = [
             ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
@@ -71,7 +74,7 @@ class OnScreenKeyboard(QWidget):
             for col, key in enumerate(keys):
                 btn = QPushButton(key)
                 if key == 'Space':
-                    btn.setFixedSize(660, 80)
+                    btn.setFixedSize(735, 80)
                     btn.clicked.connect(self.handle_space)
                     layout.addWidget(btn, row, col, 1, 6)
                 elif key == 'Backspace':
@@ -79,11 +82,11 @@ class OnScreenKeyboard(QWidget):
                     btn.clicked.connect(self.handle_backspace)
                     layout.addWidget(btn, row, col, 1, 2)
                 elif key == 'Enter':
-                    btn.setFixedSize(100, 80)
+                    btn.setFixedSize(150, 80)
                     btn.clicked.connect(self.handle_enter)
                     layout.addWidget(btn, row, col, 1, 2)
                 elif key == 'Shift':
-                    btn.setFixedSize(100, 80)
+                    btn.setFixedSize(150, 80)
                     btn.clicked.connect(self.handle_special)
                     layout.addWidget(btn, row, col, 1, 2)
                 elif key == 'Ctrl' and col == 0:
@@ -110,7 +113,7 @@ class OnScreenKeyboard(QWidget):
                 btn.setStyleSheet("""
                     QPushButton {
                         background-color: #f0f0f0;
-                        border: 2px solid #ccc;
+                        border: 2px solid #050505;
                         border-radius: 10px;
                         font-size: 18px;
                         font-weight: bold;
@@ -122,6 +125,27 @@ class OnScreenKeyboard(QWidget):
                         background-color: #d0d0d0;
                     }
                 """)
+
+        # Add the Clear button below the Backspace button
+        clear_btn = QPushButton("Clear")
+        clear_btn.setFixedSize(150, 80)
+        clear_btn.clicked.connect(self.handle_clear)
+        clear_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #f0f0f0;
+                border: 2px solid black;
+                border-radius: 10px;
+                font-size: 18px;
+                font-weight: bold;
+                color: #333;
+                padding: 10px;
+                margin: 5px;
+            }
+            QPushButton:pressed {
+                background-color: #d0d0d0;
+            }
+        """)
+        layout.addWidget(clear_btn, 1, 13, 1, 2)  # Position below Backspace
 
         self.setLayout(layout)
 
@@ -138,6 +162,9 @@ class OnScreenKeyboard(QWidget):
     def handle_backspace(self):
         current_text = self.target_input.text()
         self.target_input.setText(current_text[:-1])
+
+    def handle_clear(self):
+        self.target_input.clear()
 
     def handle_special(self):
         # Handle special keys like Shift, Ctrl, Alt, etc.
@@ -262,9 +289,8 @@ class AddBatteryWindow(QDialog):  # Add battery Window
             if self.keyboard is None or not self.keyboard.isVisible():
                 print("Showing keyboard")
                 self.keyboard = OnScreenKeyboard(self.battery_id_input, self)
-                self.keyboard.move(400,470)  # Position the keyboard below the input field
+                self.keyboard.move(320, 470)  # Position the keyboard below the input field
                 self.keyboard.show()
-                self.keyboard.border = 5  # Set the border thickness
         except Exception as e:
             print(f"Error in show_keyboard: {e}")
 
