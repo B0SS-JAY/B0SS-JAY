@@ -36,12 +36,120 @@ def setup_logos(parent):
     emrdc_logo.setFixedSize(130, 130)  # Set exact size
     emrdc_logo.move(1250, 920)  # Center it below the text
 
+class OnScreenKeyboard(QWidget):
+    def __init__(self, target_input, parent=None):
+        super().__init__(parent)
+        self.target_input = target_input
+        self.border = 10
+        self.border_color = "#333"
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle("On-Screen Keyboard")
+        self.setFixedSize(1400, 450)
+        self.setWindowFlags(Qt.Popup | Qt.WindowStaysOnTopHint)  # Set as popup and always on top
+
+        # Set the border color and style for the entire widget
+        self.setStyleSheet(f"""
+            QWidget {{
+                border: {self.border}px solid {self.border_color};  # Set the border color and thickness
+                border-radius: 10px;  # Optional: Add rounded corners
+            }}
+        """)
+
+        layout = QGridLayout()
+
+        buttons = [
+            ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace'],
+            ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
+            ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', 'Enter'],
+            ['Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'Shift'],
+            ['Ctrl', 'Alt', 'Space', 'Alt', 'Ctrl']
+        ]
+
+        for row, keys in enumerate(buttons):
+            for col, key in enumerate(keys):
+                btn = QPushButton(key)
+                if key == 'Space':
+                    btn.setFixedSize(660, 80)
+                    btn.clicked.connect(self.handle_space)
+                    layout.addWidget(btn, row, col, 1, 6)
+                elif key == 'Backspace':
+                    btn.setFixedSize(150, 80)
+                    btn.clicked.connect(self.handle_backspace)
+                    layout.addWidget(btn, row, col, 1, 2)
+                elif key == 'Enter':
+                    btn.setFixedSize(100, 80)
+                    btn.clicked.connect(self.handle_enter)
+                    layout.addWidget(btn, row, col, 1, 2)
+                elif key == 'Shift':
+                    btn.setFixedSize(100, 80)
+                    btn.clicked.connect(self.handle_special)
+                    layout.addWidget(btn, row, col, 1, 2)
+                elif key == 'Ctrl' and col == 0:
+                    btn.setFixedSize(100, 80)
+                    btn.clicked.connect(self.handle_special)
+                    layout.addWidget(btn, row, col)
+                elif key == 'Alt' and col == 1:
+                    btn.setFixedSize(100, 80)
+                    btn.clicked.connect(self.handle_special)
+                    layout.addWidget(btn, row, col)
+                elif key == 'Alt' and col == 3:
+                    btn.setFixedSize(100, 80)
+                    btn.clicked.connect(self.handle_special)
+                    layout.addWidget(btn, row, col + 6)
+                elif key == 'Ctrl' and col == 4:
+                    btn.setFixedSize(100, 80)
+                    btn.clicked.connect(self.handle_special)
+                    layout.addWidget(btn, row, col + 6)
+                else:
+                    btn.setFixedSize(100, 80)
+                    btn.clicked.connect(self.handle_button)
+                    layout.addWidget(btn, row, col)
+
+                btn.setStyleSheet("""
+                    QPushButton {
+                        background-color: #f0f0f0;
+                        border: 2px solid #ccc;
+                        border-radius: 10px;
+                        font-size: 18px;
+                        font-weight: bold;
+                        color: #333;
+                        padding: 10px;
+                        margin: 5px;
+                    }
+                    QPushButton:pressed {
+                        background-color: #d0d0d0;
+                    }
+                """)
+
+        self.setLayout(layout)
+
+    def handle_button(self):
+        sender = self.sender()
+        self.target_input.insert(sender.text())
+
+    def handle_space(self):
+        self.target_input.insert(' ')
+
+    def handle_enter(self):
+        self.target_input.insert('\n')
+
+    def handle_backspace(self):
+        current_text = self.target_input.text()
+        self.target_input.setText(current_text[:-1])
+
+    def handle_special(self):
+        # Handle special keys like Shift, Ctrl, Alt, etc.
+        pass
+
 class AddBatteryWindow(QDialog):  # Add battery Window
     def __init__(self, main_window):
         super().__init__()
         self.setWindowTitle("Add New Battery")
         self.setFixedSize(1920, 1080)  # Set smaller window size
         self.main_window = main_window  # Store reference to MainWindow
+        self.keyboard = None  # Initialize keyboard attribute
 
         # Top Background
         bg_widget = QWidget(self)
@@ -51,8 +159,8 @@ class AddBatteryWindow(QDialog):  # Add battery Window
             border: 2px solid black;  /* Border color and thickness */
         """)
 
-        setup_logos(self) #Call the Logos
-        
+        setup_logos(self)  # Call the Logos
+
         # Text inside the background
         layout = QVBoxLayout(bg_widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -94,6 +202,28 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         self.timer.start(1000)  # Update every second
         self.update_time()  # Update the clock immediately
 
+        # Dock Selection ComboBox
+        self.dock_combo = QComboBox(self)
+        self.dock_combo.setFont(QFont("Arial", 20))
+        self.dock_combo.setFixedSize(400, 50)
+        self.dock_combo.move(680, 150)
+        self.dock_combo.addItems(["Select Dock", "DOCK 1", "DOCK 2", "DOCK 3", "DOCK 4", "DOCK 5", "DOCK 6"])
+
+        # Battery ID Input
+        self.battery_id_input = QLineEdit(self)
+        self.battery_id_input.setPlaceholderText("Enter Battery ID")
+        self.battery_id_input.setFont(QFont("Arial", 20))
+        self.battery_id_input.setFixedSize(400, 50)
+        self.battery_id_input.move(680, 250)
+        self.battery_id_input.mousePressEvent = self.show_keyboard  # Connect mouse press event to show_keyboard
+
+        # Add Battery Button
+        self.add_battery_button = QPushButton("Add Battery", self)
+        self.add_battery_button.setFont(QFont("Arial", 20))
+        self.add_battery_button.setFixedSize(200, 50)
+        self.add_battery_button.move(780, 350)
+        self.add_battery_button.clicked.connect(self.add_battery)
+
         # ✅ Return Button with Home Icon and Text
         self.close_button = QPushButton(self)
         self.close_button.setIcon(QIcon(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\home.png"))  # Set the path to your home icon
@@ -107,6 +237,37 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         self.close_button.setCursor(Qt.PointingHandCursor)
         self.close_button.clicked.connect(self.close_window)
 
+        # Total Batteries Label
+        self.total_batteries_label = QLabel(self)
+        self.total_batteries_label.setFont(QFont("Arial", 30, QFont.Bold))
+        self.total_batteries_label.setFixedSize(500, 200)
+        self.total_batteries_label.move(1100, 130)
+        self.total_batteries_label.setStyleSheet("""
+            color: Black;
+            background-color: rgb(102, 178, 214);
+            border: 2px solid #555;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 5px;
+            font-size: 45px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 5px 5px 15px rgba(102, 178, 214, 0.6);
+        """)
+        self.total_batteries_label.setAlignment(Qt.AlignCenter)  # Center the text
+        self.update_total_batteries()
+
+    def show_keyboard(self, event):
+        try:
+            if self.keyboard is None or not self.keyboard.isVisible():
+                print("Showing keyboard")
+                self.keyboard = OnScreenKeyboard(self.battery_id_input, self)
+                self.keyboard.move(400,470)  # Position the keyboard below the input field
+                self.keyboard.show()
+                self.keyboard.border = 5  # Set the border thickness
+        except Exception as e:
+            print(f"Error in show_keyboard: {e}")
+
     def update_time(self):
         """ Updates the digital clock every second. """
         current_time = QTime.currentTime().toString("hh:mm:ss")
@@ -116,6 +277,30 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         """ Close this window and show the main window again """
         self.close()
         self.main_window.show()
+
+    def add_battery(self):
+        """ Add the new battery with the entered ID """
+        dock = self.dock_combo.currentText()
+        battery_id = self.battery_id_input.text()
+        if dock != "Select Dock" and battery_id:
+            # Implement the logic to add the battery with the given ID to the selected dock
+            # For example, you can add the battery to a list or database
+            print(f"Adding battery with ID: {battery_id} to {dock}")
+            # Show a message box to confirm addition
+            QMessageBox.information(self, "Battery Added", f"Battery with ID {battery_id} has been added to {dock}.")
+            # Clear the input fields
+            self.dock_combo.setCurrentIndex(0)
+            self.battery_id_input.clear()
+            self.update_total_batteries()
+        else:
+            QMessageBox.warning(self, "Input Error", "Please select a dock and enter a valid Battery ID.")
+
+    def update_total_batteries(self):
+        """ Update the total number of batteries label """
+        # For now, just a placeholder count. You can replace this with actual logic later.
+        total_batteries = 6  # Placeholder value
+        self.total_batteries_label.setText(f"TOTAL NUMBER \n OF BATTERIES\n{total_batteries}")
+
 #Text Outline
 class OutlinedLabel(QLabel):
     def __init__(self, text, parent=None):
@@ -274,7 +459,7 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
     def update_total_batteries(self):
             """ Update the total number of batteries label """
             total_batteries = self.battery_id_combo.count()
-            self.total_batteries_label.setText(f"TOTAL NUMBER \nOF BATTERIES\n              {total_batteries}")
+            self.total_batteries_label.setText(f"TOTAL NUMBER \n OF BATTERIES\n              {total_batteries}")
 
 class IDWindow(QDialog):  # Generic Dock Window for all docks
     def __init__(self, BP_ID, main_window):
