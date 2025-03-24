@@ -1,7 +1,22 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+import sqlite3
 
+def create_database():
+    conn = sqlite3.connect('batteries.db')
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS batteries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            dock TEXT NOT NULL,
+            battery_id TEXT NOT NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+create_database()
 
 def setup_logos(parent):
     # CSU LOGO
@@ -171,6 +186,7 @@ class OnScreenKeyboard(QWidget):
         pass
 
 class AddBatteryWindow(QDialog):  # Add battery Window
+    battery_added = pyqtSignal()  # Signal to notify when a battery is added
     def __init__(self, main_window):
         super().__init__()
         self.setWindowTitle("Add New Battery")
@@ -281,8 +297,11 @@ class AddBatteryWindow(QDialog):  # Add battery Window
             text-align: center;
             box-shadow: 5px 5px 15px rgba(102, 178, 214, 0.6);
         """)
-        self.total_batteries_label.setAlignment(Qt.AlignCenter)  # Center the text
+        self.total_batteries_label.setAlignment(Qt.AlignCenter)
         self.update_total_batteries()
+
+    def connect_db(self):
+        return sqlite3.connect('batteries.db')
 
     def show_keyboard(self, event):
         try:
@@ -305,26 +324,28 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         self.main_window.show()
 
     def add_battery(self):
-        """ Add the new battery with the entered ID """
         dock = self.dock_combo.currentText()
         battery_id = self.battery_id_input.text()
         if dock != "Select Dock" and battery_id:
-            # Implement the logic to add the battery with the given ID to the selected dock
-            # For example, you can add the battery to a list or database
-            print(f"Adding battery with ID: {battery_id} to {dock}")
-            # Show a message box to confirm addition
+            conn = self.connect_db()
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO batteries (dock, battery_id) VALUES (?, ?)', (dock, battery_id))
+            conn.commit()
+            conn.close()
             QMessageBox.information(self, "Battery Added", f"Battery with ID {battery_id} has been added to {dock}.")
-            # Clear the input fields
             self.dock_combo.setCurrentIndex(0)
             self.battery_id_input.clear()
             self.update_total_batteries()
+            self.battery_added.emit()  # Emit the signal to notify that a battery has been added
         else:
             QMessageBox.warning(self, "Input Error", "Please select a dock and enter a valid Battery ID.")
 
     def update_total_batteries(self):
-        """ Update the total number of batteries label """
-        # For now, just a placeholder count. You can replace this with actual logic later.
-        total_batteries = 6  # Placeholder value
+        conn = self.connect_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM batteries')
+        total_batteries = cursor.fetchone()[0]
+        conn.close()
         self.total_batteries_label.setText(f"TOTAL NUMBER \n OF BATTERIES\n{total_batteries}")
 
 #Text Outline
@@ -424,7 +445,7 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         self.battery_id_combo.setFont(QFont("Arial", 20))
         self.battery_id_combo.setFixedSize(400, 50)
         self.battery_id_combo.move(560, 300)
-        self.battery_id_combo.addItems(["BP01", "BP02", "BP03", "BP04", "BP05", "BP06"])  # Add battery IDs
+        self.refresh_battery_ids()  # Populate the combo box with battery IDs
 
         # Delete Button
         self.delete_button = QPushButton("Delete Battery", self)
@@ -449,9 +470,36 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
          # Total Batteries Label
         self.total_batteries_label = QLabel(self)
         self.total_batteries_label.setFont(QFont("Arial", 30, QFont.Bold))
-        self.total_batteries_label.setFixedSize(500, 500)
-        self.total_batteries_label.move(1060, 120)
+        self.total_batteries_label.setFixedSize(500, 200)
+        self.total_batteries_label.move(1100, 130)
+        self.total_batteries_label.setStyleSheet("""
+            color: Black;
+            background-color: rgb(102, 178, 214);
+            border: 2px solid #555;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 5px;
+            font-size: 45px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 5px 5px 15px rgba(102, 178, 214, 0.6);
+        """)
+        self.total_batteries_label.setAlignment(Qt.AlignCenter)
         self.update_total_batteries()
+
+    def connect_db(self):
+        return sqlite3.connect('batteries.db')
+    
+    def refresh_battery_ids(self):
+        """ Refresh the battery IDs in the combo box """
+        conn = self.connect_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT battery_id FROM batteries')
+        battery_ids = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        self.battery_id_combo.clear()
+        self.battery_id_combo.addItems(battery_ids)
+
 
     def update_time(self):
         """ Updates the digital clock every second. """
@@ -464,28 +512,32 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         self.main_window.show()
 
     def delete_battery(self):
-        """ Delete the battery with the selected ID """
         battery_id = self.battery_id_combo.currentText()
         if battery_id:
-            # Show a confirmation dialog
             reply = QMessageBox.question(self, 'Confirm Deletion',
                                          f"Are you sure you want to delete battery with ID {battery_id}?",
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
-                # Implement the logic to delete the battery with the given ID
-                # For example, you can remove the battery from a list or database
-                print(f"Deleting battery with ID: {battery_id}")
-                # Show a message box to confirm deletion
+                conn = self.connect_db()
+                cursor = conn.cursor()
+                cursor.execute('DELETE FROM batteries WHERE battery_id = ?', (battery_id,))
+                conn.commit()
+                conn.close()
                 QMessageBox.information(self, "Battery Deleted", f"Battery with ID {battery_id} has been deleted.")
+                self.refresh_battery_ids()  # Refresh the combo box after deletion
+                self.update_total_batteries()
             else:
                 print("Deletion cancelled.")
         else:
             QMessageBox.warning(self, "Input Error", "Please select a valid Battery ID.")
 
     def update_total_batteries(self):
-            """ Update the total number of batteries label """
-            total_batteries = self.battery_id_combo.count()
-            self.total_batteries_label.setText(f"TOTAL NUMBER \n OF BATTERIES\n              {total_batteries}")
+        conn = self.connect_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM batteries')
+        total_batteries = cursor.fetchone()[0]
+        conn.close()
+        self.total_batteries_label.setText(f"TOTAL NUMBER \n OF BATTERIES\n{total_batteries}")
 
 class IDWindow(QDialog):  # Generic Dock Window for all docks
     def __init__(self, BP_ID, main_window):
