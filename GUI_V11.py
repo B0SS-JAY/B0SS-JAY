@@ -3,40 +3,6 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from add_battery_window import *  # Import the AddBatteryWindow
 
-# Define the setup_logos function
-def setup_logos(parent):
-    # CSU LOGO
-    csu_logo = QLabel(parent)
-    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\csulogo.png")
-    csu_logo.setPixmap(pixmap)
-    csu_logo.setScaledContents(True)
-    csu_logo.setFixedSize(100, 100)  # Set exact size
-    csu_logo.move(1155, 935)  # Center it below the text
-
-    # PCIEERD LOGO
-    pcieerd_logo = QLabel(parent)
-    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\PCIEERD.png")
-    pcieerd_logo.setPixmap(pixmap)
-    pcieerd_logo.setScaledContents(True)
-    pcieerd_logo.setFixedSize(100, 100)  # Set exact size
-    pcieerd_logo.move(850, 935)  # Center it below the text
-
-    # NICER LOGO
-    nicer_logo = QLabel(parent)
-    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\NICER.png")
-    nicer_logo.setPixmap(pixmap)
-    nicer_logo.setScaledContents(True)
-    nicer_logo.setFixedSize(230, 100)  # Set exact size
-    nicer_logo.move(950, 935)  # Center it below the text
-
-    # EMRDC LOGO
-    emrdc_logo = QLabel(parent)
-    pixmap = QPixmap(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\EMRDC.png")
-    emrdc_logo.setPixmap(pixmap)
-    emrdc_logo.setScaledContents(True)
-    emrdc_logo.setFixedSize(130, 130)  # Set exact size
-    emrdc_logo.move(1250, 920)  # Center it below the text
-
 class MainWindow(QMainWindow): #Main Window
     def __init__(self):
         super().__init__()
@@ -83,25 +49,7 @@ class MainWindow(QMainWindow): #Main Window
             border: 2px solid black;  /* Border color and thickness */
         """)
 
-       # Digital Clock Label (Top Left)
-        self.clock_label = QLabel(self)
-        self.clock_label.setFont(QFont("DS Digital", 27, QFont.Bold))
-        self.clock_label.setStyleSheet("""
-            color: white;
-            background-color: #333;
-            border: 2px solid #555;
-            border-radius: 10px;
-            padding: 5px;
-        """)
-        self.clock_label.setAlignment(Qt.AlignCenter)
-        self.clock_label.setFixedSize(230, 60)
-        self.clock_label.move(20, 20)  # Position in the top-left corner
-
-        # Start the clock update timer
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_time)
-        self.timer.start(1000)  # Update every second
-        self.update_time()  # Update the clock immediately
+        self.clock_label, self.timer = setup_clock(self)
 
         # Table setup
         layout = QVBoxLayout(bg_widget)
@@ -178,7 +126,6 @@ class MainWindow(QMainWindow): #Main Window
         self.charging_display.setFixedSize(250, 100)  # Adjust height to fit text only
         self.charging_display.move(15, 700)
         self.charging_display.raise_()
-
 
         # TOTAL EMPTY BATTERY DOCK
         self.battery_dock = QLabel("EMPTY BATTERY \nDOCK", self)
@@ -293,11 +240,6 @@ class MainWindow(QMainWindow): #Main Window
         self.hide()  # Hide main window instead of closing it
         self.delete_battery_window = DeleteBatteryWindow(self)  # Pass reference to main window
         self.delete_battery_window.exec_()  # Open AddBatteryWindow as modal
-
-    def update_time(self):
-        """ Updates the digital clock every second. """
-        current_time = QTime.currentTime().toString("hh:mm:ss")
-        self.clock_label.setText(current_time)
 
     def create_tables(self):
         """ Creates and returns a QTableWidget with sample data. """

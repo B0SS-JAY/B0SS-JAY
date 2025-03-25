@@ -51,7 +51,37 @@ def setup_logos(parent):
     emrdc_logo.setFixedSize(130, 130)  # Set exact size
     emrdc_logo.move(1250, 920)  # Center it below the text
 
+def setup_clock(parent):
+    # Digital Clock Label (Top Left)
+    clock_label = QLabel(parent)
+    clock_label.setFont(QFont("DS Digital", 27, QFont.Bold))
+    clock_label.setStyleSheet("""
+        color: white;
+        background-color: #333;
+        border: 2px solid #555;
+        border-radius: 10px;
+        padding: 5px;
+    """)
+    clock_label.setAlignment(Qt.AlignCenter)
+    clock_label.setFixedSize(230, 60)
+    clock_label.move(20, 20)  # Position in the top-left corner
+
+    def update_time():
+        """ Updates the digital clock every second. """
+        current_time = QTime.currentTime().toString("hh:mm:ss")
+        clock_label.setText(current_time)
+
+    # Start the clock update timer
+    timer = QTimer(parent)
+    timer.timeout.connect(update_time)
+    timer.start(1000)  # Update every second
+    update_time()  # Update the clock immediately
+
+    return clock_label, timer
+
+
 class OnScreenKeyboard(QWidget):
+    
     def __init__(self, target_input, parent=None):
         super().__init__(parent)
         self.target_input = target_input
@@ -208,7 +238,7 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         layout = QVBoxLayout(bg_widget)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        # Main Menu Text
+        # Add New Battery Text
         text_label = QLabel("            ADD NEW BATTERY", self)
         text_label.setFont(QFont("Arial", 55, QFont.Bold))
         text_label.setAlignment(Qt.AlignCenter)
@@ -225,25 +255,7 @@ class AddBatteryWindow(QDialog):  # Add battery Window
             border: 2px solid black;  /* Border color and thickness */
         """)
 
-        # Digital Clock Label (Top Left)
-        self.clock_label = QLabel(self)
-        self.clock_label.setFont(QFont("DS Digital", 27, QFont.Bold))
-        self.clock_label.setStyleSheet("""
-            color: white;
-            background-color: #333;
-            border: 2px solid #555;
-            border-radius: 10px;
-            padding: 5px;
-        """)
-        self.clock_label.setAlignment(Qt.AlignCenter)
-        self.clock_label.setFixedSize(230, 60)
-        self.clock_label.move(20, 20)  # Position in the top-left corner
-
-        # Start the clock update timer
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_time)
-        self.timer.start(1000)  # Update every second
-        self.update_time()  # Update the clock immediately
+        self.clock_label, self.timer = setup_clock(self)
 
         # Dock Selection ComboBox
         self.dock_combo = QComboBox(self)
@@ -300,6 +312,20 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         self.total_batteries_label.setAlignment(Qt.AlignCenter)
         self.update_total_batteries()
 
+        # List of Batteries Label
+        self.list_of_batteries_label = QLabel("LIST OF \nBATTERIES", self)
+        self.list_of_batteries_label.setFont(QFont("Arial", 20, QFont.Bold))
+        self.list_of_batteries_label.setAlignment(Qt.AlignCenter)
+        self.list_of_batteries_label.setFixedSize(250, 100)
+        self.list_of_batteries_label.move(10, 350)
+
+        # Battery ID List
+        self.battery_id_list = QListWidget(self)
+        self.battery_id_list.setFont(QFont("Arial", 20))
+        self.battery_id_list.setFixedSize(250, 550)
+        self.battery_id_list.move(10, 450)
+        self.refresh_battery_id_list()  # Populate the list with battery IDs
+
     def connect_db(self):
         return sqlite3.connect('batteries.db')
 
@@ -313,11 +339,6 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         except Exception as e:
             print(f"Error in show_keyboard: {e}")
 
-    def update_time(self):
-        """ Updates the digital clock every second. """
-        current_time = QTime.currentTime().toString("hh:mm:ss")
-        self.clock_label.setText(current_time)
-
     def close_window(self):
         """ Close this window and show the main window again """
         self.close()
@@ -329,14 +350,28 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         if dock != "Select Dock" and battery_id:
             conn = self.connect_db()
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO batteries (dock, battery_id) VALUES (?, ?)', (dock, battery_id))
-            conn.commit()
-            conn.close()
-            QMessageBox.information(self, "Battery Added", f"Battery with ID {battery_id} has been added to {dock}.")
-            self.dock_combo.setCurrentIndex(0)
-            self.battery_id_input.clear()
-            self.update_total_batteries()
-            self.battery_added.emit()  # Emit the signal to notify that a battery has been added
+            cursor.execute('SELECT COUNT(*) FROM batteries WHERE battery_id = ?', (battery_id,))
+            if cursor.fetchone()[0] > 0:
+                QMessageBox.warning(self, "Duplicate Battery ID", f"Battery with ID {battery_id} already exists.")
+                conn.close()
+                return
+
+            reply = QMessageBox.question(self, 'Confirm Addition',
+                                        f"Are you sure you want to add battery with ID {battery_id} to {dock}?",
+                                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                cursor.execute('INSERT INTO batteries (dock, battery_id) VALUES (?, ?)', (dock, battery_id))
+                conn.commit()
+                conn.close()
+                QMessageBox.information(self, "Battery Added", f"Battery with ID {battery_id} has been added to {dock}.")
+                self.dock_combo.setCurrentIndex(0)
+                self.battery_id_input.clear()
+                self.update_total_batteries()
+                self.refresh_battery_id_list()  # Refresh the list after adding a new battery
+                self.battery_added.emit()  # Emit the signal to notify that a battery has been added
+            else:
+                conn.close()
+                print("Addition cancelled.")
         else:
             QMessageBox.warning(self, "Input Error", "Please select a dock and enter a valid Battery ID.")
 
@@ -347,6 +382,16 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         total_batteries = cursor.fetchone()[0]
         conn.close()
         self.total_batteries_label.setText(f"TOTAL NUMBER \n OF BATTERIES\n{total_batteries}")
+
+    def refresh_battery_id_list(self):
+        """ Refresh the battery IDs in the list widget """
+        conn = self.connect_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT battery_id FROM batteries')
+        battery_ids = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        self.battery_id_list.clear()
+        self.battery_id_list.addItems(battery_ids)
 
 #Text Outline
 class OutlinedLabel(QLabel):
@@ -420,25 +465,7 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
             border: 2px solid black;  /* Border color and thickness */
         """)
 
-        # Digital Clock Label (Top Left)
-        self.clock_label = QLabel(self)
-        self.clock_label.setFont(QFont("DS Digital", 27, QFont.Bold))
-        self.clock_label.setStyleSheet("""
-            color: white;
-            background-color: #333;
-            border: 2px solid #555;
-            border-radius: 10px;
-            padding: 5px;
-        """)
-        self.clock_label.setAlignment(Qt.AlignCenter)
-        self.clock_label.setFixedSize(230, 60)
-        self.clock_label.move(20, 20)  # Position in the top-left corner
-
-        # Start the clock update timer
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_time)
-        self.timer.start(1000)  # Update every second
-        self.update_time()  # Update the clock immediately
+        self.clock_label, self.timer = setup_clock(self)
 
         # Battery ID ComboBox
         self.battery_id_combo = QComboBox(self)
@@ -471,7 +498,7 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         self.total_batteries_label = QLabel(self)
         self.total_batteries_label.setFont(QFont("Arial", 30, QFont.Bold))
         self.total_batteries_label.setFixedSize(500, 200)
-        self.total_batteries_label.move(1100, 130)
+        self.total_batteries_label.move(1100, 280)
         self.total_batteries_label.setStyleSheet("""
             color: Black;
             background-color: rgb(102, 178, 214);
@@ -487,6 +514,20 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         self.total_batteries_label.setAlignment(Qt.AlignCenter)
         self.update_total_batteries()
 
+        # List of Batteries Label
+        self.list_of_batteries_label = QLabel("LIST OF \nBATTERIES", self)
+        self.list_of_batteries_label.setFont(QFont("Arial", 20, QFont.Bold))
+        self.list_of_batteries_label.setAlignment(Qt.AlignCenter)
+        self.list_of_batteries_label.setFixedSize(250, 100)
+        self.list_of_batteries_label.move(10, 350)
+
+        # Battery ID List
+        self.battery_id_list = QListWidget(self)
+        self.battery_id_list.setFont(QFont("Arial", 20))
+        self.battery_id_list.setFixedSize(250, 550)
+        self.battery_id_list.move(10, 450)
+        self.refresh_battery_id_list()  # Populate the list with battery IDs
+
     def connect_db(self):
         return sqlite3.connect('batteries.db')
     
@@ -499,12 +540,6 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         conn.close()
         self.battery_id_combo.clear()
         self.battery_id_combo.addItems(battery_ids)
-
-
-    def update_time(self):
-        """ Updates the digital clock every second. """
-        current_time = QTime.currentTime().toString("hh:mm:ss")
-        self.clock_label.setText(current_time)
 
     def close_window(self):
         """ Close this window and show the main window again """
@@ -526,6 +561,7 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
                 QMessageBox.information(self, "Battery Deleted", f"Battery with ID {battery_id} has been deleted.")
                 self.refresh_battery_ids()  # Refresh the combo box after deletion
                 self.update_total_batteries()
+                self.refresh_battery_id_list()  # Refresh the list after adding a new battery
             else:
                 print("Deletion cancelled.")
         else:
@@ -538,6 +574,16 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         total_batteries = cursor.fetchone()[0]
         conn.close()
         self.total_batteries_label.setText(f"TOTAL NUMBER \n OF BATTERIES\n{total_batteries}")
+    
+    def refresh_battery_id_list(self):
+        """ Refresh the battery IDs in the list widget """
+        conn = self.connect_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT battery_id FROM batteries')
+        battery_ids = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        self.battery_id_list.clear()
+        self.battery_id_list.addItems(battery_ids)
 
 class IDWindow(QDialog):  # Generic Dock Window for all docks
     def __init__(self, BP_ID, main_window):
