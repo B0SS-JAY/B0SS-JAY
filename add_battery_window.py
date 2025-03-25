@@ -79,6 +79,99 @@ def setup_clock(parent):
 
     return clock_label, timer
 
+def home_button(parent):
+    # ✅ Return Button with Home Icon and Text
+    close_button = QPushButton(parent)
+    close_button.setIcon(QIcon(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\home.png"))  # Set the path to your home icon
+    close_button.setIconSize(QSize(50, 50))  # Set the icon size
+    close_button.setFixedSize(200, 70)  # Set button size
+    close_button.setStyleSheet("text-align: left; padding-left: 10px;")  # Align text to the left with padding
+    close_button.setText("Main Menu")  # Set the text
+    close_button.setFont(QFont("Arial", 14))  # Set the font for the text
+    close_button.move(40, 150)
+    close_button.setAttribute(Qt.WA_Hover)
+    close_button.setCursor(Qt.PointingHandCursor)
+    close_button.clicked.connect(parent.close_window)  # Connect to parent's close_window method
+    close_button.setStyleSheet("""
+            QPushButton {
+            }
+            QPushButton:hover {
+                background-color: #e0e0e0; /* Slightly darker gray on hover */
+            }
+            QPushButton:pressed {
+                background-color: #d0d0d0; /* Even darker gray when pressed */
+            }
+        """)
+
+def history_button(parent):
+    button_history = QPushButton(parent)
+    button_history.setFixedSize(200, 70)  # Set button size
+    button_history.setIcon(QIcon(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\history.png"))  # Set the path to your history icon
+    button_history.setIconSize(QSize(30, 30))  # Set the icon size
+    button_history.setStyleSheet("text-align: left; padding-left: 10px;")  # Align text to the left with padding
+    button_history.setText("History")  # Set the text
+    button_history.setFont(QFont("Arial", 15))  # Set the font for the text
+    button_history.move(40, 250)
+    button_history.setAttribute(Qt.WA_Hover)
+    button_history.setCursor(Qt.PointingHandCursor)
+    button_history.clicked.connect(parent.open_history_window)  # Connect to parent's open_history_window method
+    button_history.setStyleSheet("""
+        QPushButton {
+        }
+        QPushButton:hover {
+            background-color: #e0e0e0; /* Slightly darker gray on hover */
+        }
+        QPushButton:pressed {
+            background-color: #d0d0d0; /* Even darker gray when pressed */
+        }
+    """)
+
+class HistoryWindow(QDialog):  # History Window
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("History")
+        self.setFixedSize(1920, 1080)  # Set the size of the History window
+
+       # Top Background
+        bg_widget = QWidget(self)
+        bg_widget.setFixedSize(1920, 1080 // 10)
+        bg_widget.setStyleSheet("""
+            background-color: rgb(189, 221, 252);
+            border: 2px solid black;  /* Border color and thickness */
+        """)
+
+        setup_logos(self) #Call the Logos
+
+        # Text inside the background
+        layout = QVBoxLayout(bg_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        # Main Menu Text
+        text_label = QLabel("            BATTERY HISTORY", self)
+        text_label.setFont(QFont("Arial", 55, QFont.Bold))
+        text_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(text_label)
+
+        # Place the background widget at the top
+        bg_widget.move(0, 0)
+
+        # Side background
+        side_bg_widget = QWidget(self)
+        side_bg_widget.setFixedSize(1920 // 7, 1080)
+        side_bg_widget.setStyleSheet("""
+            background-color: rgb(102, 178, 214);
+            border: 2px solid black;  /* Border color and thickness */
+        """)
+
+        self.clock_label, self.timer = setup_clock(self)
+
+       # Add a close button
+        close_button = QPushButton("Back", self)
+        close_button.setFixedSize(200, 70)  # Set the size of the button
+        close_button.move(40, 300)  # Manually position the button
+        close_button.clicked.connect(self.close)  # Connect the button to the close method
+
+
 
 class OnScreenKeyboard(QWidget):
     
@@ -256,6 +349,8 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         """)
 
         self.clock_label, self.timer = setup_clock(self)
+        home_button(self)
+        history_button(self)
 
         # Dock Selection ComboBox
         self.dock_combo = QComboBox(self)
@@ -275,22 +370,20 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         # Add Battery Button
         self.add_battery_button = QPushButton("Add Battery", self)
         self.add_battery_button.setFont(QFont("Arial", 20))
-        self.add_battery_button.setFixedSize(200, 50)
-        self.add_battery_button.move(780, 350)
+        self.add_battery_button.setFixedSize(250, 70)
+        self.add_battery_button.move(750, 330)
+        self.add_battery_button.setStyleSheet("""
+            QPushButton {
+            }
+            QPushButton:hover {
+                background-color: #e0e0e0; /* Slightly darker gray on hover */
+            }
+            QPushButton:pressed {
+                background-color: #d0d0d0; /* Even darker gray when pressed */
+            }
+        """)
         self.add_battery_button.clicked.connect(self.add_battery)
 
-        # ✅ Return Button with Home Icon and Text
-        self.close_button = QPushButton(self)
-        self.close_button.setIcon(QIcon(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\home.png"))  # Set the path to your home icon
-        self.close_button.setIconSize(QSize(50, 50))  # Set the icon size
-        self.close_button.setFixedSize(200, 70)  # Set button size
-        self.close_button.setStyleSheet("text-align: left; padding-left: 10px;")  # Align text to the left with padding
-        self.close_button.setText("Main Menu")  # Set the text
-        self.close_button.setFont(QFont("Arial", 14))  # Set the font for the text
-        self.close_button.move(40, 150)
-        self.close_button.setAttribute(Qt.WA_Hover)
-        self.close_button.setCursor(Qt.PointingHandCursor)
-        self.close_button.clicked.connect(self.close_window)
 
         # Total Batteries Label
         self.total_batteries_label = QLabel(self)
@@ -326,6 +419,18 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         self.battery_id_list.move(10, 450)
         self.refresh_battery_id_list()  # Populate the list with battery IDs
 
+    
+    def close_window(self):
+        """ Close this window and show the main window again """
+        self.close()
+        self.main_window.show()
+    
+    def open_history_window(self):
+        """Open the History window."""
+        if not hasattr(self, 'history_window_instance') or self.history_window_instance is None:
+            self.history_window_instance = HistoryWindow(self)
+        self.history_window_instance.show()
+
     def connect_db(self):
         return sqlite3.connect('batteries.db')
 
@@ -338,11 +443,6 @@ class AddBatteryWindow(QDialog):  # Add battery Window
                 self.keyboard.show()
         except Exception as e:
             print(f"Error in show_keyboard: {e}")
-
-    def close_window(self):
-        """ Close this window and show the main window again """
-        self.close()
-        self.main_window.show()
 
     def add_battery(self):
         dock = self.dock_combo.currentText()
@@ -477,22 +577,23 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         # Delete Button
         self.delete_button = QPushButton("Delete Battery", self)
         self.delete_button.setFont(QFont("Arial", 20))
-        self.delete_button.setFixedSize(300, 50)
+        self.delete_button.setFixedSize(250, 70)
         self.delete_button.move(620, 400)
         self.delete_button.clicked.connect(self.delete_battery)
+        self.delete_button.setStyleSheet("""
+            QPushButton {
+            }
+            QPushButton:hover {
+                background-color: #e0e0e0; /* Slightly darker gray on hover */
+            }
+            QPushButton:pressed {
+                background-color: #d0d0d0; /* Even darker gray when pressed */
+            }
+        """)
 
-        # ✅ Return Button with Home Icon and Text
-        self.close_button = QPushButton(self)
-        self.close_button.setIcon(QIcon(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\home.png"))  # Set the path to your home icon
-        self.close_button.setIconSize(QSize(50, 50))  # Set the icon size
-        self.close_button.setFixedSize(200, 70)  # Set button size
-        self.close_button.setStyleSheet("text-align: left; padding-left: 10px;")  # Align text to the left with padding
-        self.close_button.setText("Main Menu")  # Set the text
-        self.close_button.setFont(QFont("Arial", 14))  # Set the font for the text
-        self.close_button.move(40, 150)
-        self.close_button.setAttribute(Qt.WA_Hover)
-        self.close_button.setCursor(Qt.PointingHandCursor)
-        self.close_button.clicked.connect(self.close_window)
+        # Call the home_button function
+        home_button(self)
+        history_button(self)
 
          # Total Batteries Label
         self.total_batteries_label = QLabel(self)
@@ -546,6 +647,12 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         self.close()
         self.main_window.show()
 
+    def open_history_window(self):
+        """Open the History window."""
+        if not hasattr(self, 'history_window_instance') or self.history_window_instance is None:
+            self.history_window_instance = HistoryWindow(self)
+        self.history_window_instance.show()
+
     def delete_battery(self):
         battery_id = self.battery_id_combo.currentText()
         if battery_id:
@@ -585,7 +692,7 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         self.battery_id_list.clear()
         self.battery_id_list.addItems(battery_ids)
 
-class IDWindow(QDialog):  # Generic Dock Window for all docks
+class IDWindow(QDialog):  # ID Windows
     def __init__(self, BP_ID, main_window):
         super().__init__()
         self.setWindowTitle(f"{BP_ID} Details")
