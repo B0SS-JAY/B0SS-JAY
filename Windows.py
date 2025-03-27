@@ -6,11 +6,21 @@ import sqlite3
 def create_database():
     conn = sqlite3.connect('batteries.db')
     cursor = conn.cursor()
+    # Create batteries table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS batteries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             dock TEXT NOT NULL,
             battery_id TEXT NOT NULL
+        )
+    ''')
+    # Create history table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            operation TEXT NOT NULL,
+            battery_id TEXT NOT NULL,
+            timestamp TEXT NOT NULL
         )
     ''')
     conn.commit()
@@ -242,15 +252,16 @@ class HistoryWindow(QDialog):  # History Window
         home_button(self)
 
     def populate_table(self):
-        """Populate the table with sample data."""
-        sample_data = [
-            ["2025-03-27 10:00:00", "Added Battery", "Battery ID: 12345"],
-            ["2025-03-26 14:30:00", "Deleted Battery", "Battery ID: 67890"],
-            ["2025-03-25 09:15:00", "Added Battery", "Battery ID: 54321"],
-            ["2025-03-24 16:45:00", "Deleted Battery", "Battery ID: 98765"],
-        ]
+        """Populate the table with data from the history table."""
+        conn = sqlite3.connect('batteries.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT timestamp, operation, battery_id FROM history ORDER BY id DESC')
+        history_data = cursor.fetchall()
+        conn.close()
 
-        for row, data in enumerate(sample_data):
+        self.history_table.setRowCount(len(history_data))  # Set the number of rows
+
+        for row, data in enumerate(history_data):
             for col, value in enumerate(data):
                 item = QTableWidgetItem(value)
                 item.setTextAlignment(Qt.AlignCenter)
@@ -266,7 +277,6 @@ class HistoryWindow(QDialog):  # History Window
         if hasattr(self, 'previous_window') and self.previous_window:  # If a previous window is provided
             self.previous_window.show()  # Show the previous window
     
-
 class OnScreenKeyboard(QWidget):
     
     def __init__(self, target_input, parent=None):
@@ -555,7 +565,11 @@ class AddBatteryWindow(QDialog):  # Add battery Window
                                         f"Are you sure you want to add battery with ID {battery_id} to {dock}?",
                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
+                # Insert into batteries table
                 cursor.execute('INSERT INTO batteries (dock, battery_id) VALUES (?, ?)', (dock, battery_id))
+                # Log the operation in the history table
+                cursor.execute('INSERT INTO history (operation, battery_id, timestamp) VALUES (?, ?, ?)',
+                            ("Added Battery", battery_id, QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm:ss")))
                 conn.commit()
                 conn.close()
                 QMessageBox.information(self, "Battery Added", f"Battery with ID {battery_id} has been added to {dock}.")
@@ -588,7 +602,6 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         self.battery_id_list.clear()
         self.battery_id_list.addItems(battery_ids)
 
-#Text Outline
 class OutlinedLabel(QLabel):
     def __init__(self, text, parent=None):
         super().__init__(text, parent)
@@ -753,12 +766,16 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         battery_id = self.battery_id_combo.currentText()
         if battery_id:
             reply = QMessageBox.question(self, 'Confirm Deletion',
-                                         f"Are you sure you want to delete battery with ID {battery_id}?",
-                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                        f"Are you sure you want to delete battery with ID {battery_id}?",
+                                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
                 conn = self.connect_db()
                 cursor = conn.cursor()
+                # Delete from batteries table
                 cursor.execute('DELETE FROM batteries WHERE battery_id = ?', (battery_id,))
+                # Log the operation in the history table
+                cursor.execute('INSERT INTO history (operation, battery_id, timestamp) VALUES (?, ?, ?)',
+                            ("Deleted Battery", battery_id, QDateTime.currentDateTime().toString("yyyy-MM-dd hh:mm:ss")))
                 conn.commit()
                 conn.close()
                 QMessageBox.information(self, "Battery Deleted", f"Battery with ID {battery_id} has been deleted.")
