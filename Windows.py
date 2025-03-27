@@ -79,6 +79,27 @@ def setup_clock(parent):
 
     return clock_label, timer
 
+def date(parent):
+    # Add current date below the clock
+    date_label = QLabel(parent)
+    date_label.setFont(QFont("Arial", 20, QFont.Bold))
+    date_label.setStyleSheet("""
+        color: white;
+        background-color: #333;
+        border: 2px solid #555;
+        border-radius: 10px;
+        padding: 5px;
+    """)
+    date_label.setAlignment(Qt.AlignCenter)
+    date_label.setFixedSize(230, 40)
+    date_label.move(20, 90)  # Position below the clock
+
+    # Update the date label with the current date
+    current_date = QDate.currentDate().toString("yyyy-MM-dd")
+    date_label.setText(current_date)
+
+    return date_label
+        
 def home_button(parent):
     # ✅ Return Button with Home Icon and Text
     close_button = QPushButton(parent)
@@ -127,12 +148,13 @@ def history_button(parent):
     """)
 
 class HistoryWindow(QDialog):  # History Window
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, main_window):
+        super().__init__(main_window)
         self.setWindowTitle("History")
         self.setFixedSize(1920, 1080)  # Set the size of the History window
+        self.main_window = main_window  # Store reference to MainWindow
 
-       # Top Background
+        # Top Background
         bg_widget = QWidget(self)
         bg_widget.setFixedSize(1920, 1080 // 10)
         bg_widget.setStyleSheet("""
@@ -140,7 +162,7 @@ class HistoryWindow(QDialog):  # History Window
             border: 2px solid black;  /* Border color and thickness */
         """)
 
-        setup_logos(self) #Call the Logos
+        setup_logos(self)  # Call the Logos
 
         # Text inside the background
         layout = QVBoxLayout(bg_widget)
@@ -164,14 +186,86 @@ class HistoryWindow(QDialog):  # History Window
         """)
 
         self.clock_label, self.timer = setup_clock(self)
+        self.date_label = date(self)  # Call the fixed date function
 
-       # Add a close button
-        close_button = QPushButton("Back", self)
-        close_button.setFixedSize(200, 70)  # Set the size of the button
-        close_button.move(40, 300)  # Manually position the button
-        close_button.clicked.connect(self.close)  # Connect the button to the close method
+        # Add a table to display history data
+        self.history_table = QTableWidget(self)
+        self.history_table.setRowCount(10)  # Example: 10 rows
+        self.history_table.setColumnCount(3)  # Example: 3 columns
+        self.history_table.setHorizontalHeaderLabels(["DATE AND \nTIME", "OPERATION", "DETAILS"])
+        self.history_table.horizontalHeader().setStretchLastSection(True)
+        self.history_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.history_table.setFont(QFont("Arial", 15))
+        self.history_table.setFixedSize(1600, 700)
+        self.history_table.move(300, 130)  # Position the table in the center
+        self.history_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.history_table.setSelectionMode(QAbstractItemView.NoSelection)
+        self.history_table.verticalHeader().setDefaultSectionSize(100)  # Adjust row height
+        self.history_table.horizontalHeader().setDefaultSectionSize(161)  # Adjust column width
 
+        # Hide the vertical header (row numbers)
+        self.history_table.verticalHeader().setVisible(False)
 
+        # Style the header using QStyleSheet
+        self.history_table.setStyleSheet("""
+                QTableWidget {
+                    border: 3px solid black;
+                }
+                QHeaderView::section {
+                    background-color: lightgray;
+                    border: 2px solid black;
+                    font-size: 20pt;  /* Increased font size */
+                    font-weight: bold;  /* Make font bold */
+                    text-align: center;  /* Center align text */
+                    padding: 10px;  /* Add padding for better spacing */
+                }
+                QTableWidget::item {
+                    border: 1px solid black;
+                }
+                QTableWidget::item:selected {
+                    background-color: rgb(189, 221, 252);
+                    color: Black;
+                }
+            """)
+
+        # Add sample data to the table
+        self.populate_table()
+        
+         # Add a "Back" button
+        back_button = QPushButton("Back", self)
+        back_button.setFont(QFont("Arial", 20))
+        back_button.setIcon(QIcon(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\back.png"))  # Set the path to your home icon
+        back_button.setIconSize(QSize(30, 30))  # Set the icon size
+        back_button.setFixedSize(200, 70)
+        back_button.move(40, 250)  # Position the button
+        back_button.clicked.connect(self.go_back)  # Connect to the back function
+        home_button(self)
+
+    def populate_table(self):
+        """Populate the table with sample data."""
+        sample_data = [
+            ["2025-03-27 10:00:00", "Added Battery", "Battery ID: 12345"],
+            ["2025-03-26 14:30:00", "Deleted Battery", "Battery ID: 67890"],
+            ["2025-03-25 09:15:00", "Added Battery", "Battery ID: 54321"],
+            ["2025-03-24 16:45:00", "Deleted Battery", "Battery ID: 98765"],
+        ]
+
+        for row, data in enumerate(sample_data):
+            for col, value in enumerate(data):
+                item = QTableWidgetItem(value)
+                item.setTextAlignment(Qt.AlignCenter)
+                self.history_table.setItem(row, col, item)
+
+    def close_window(self):
+        """ Close this window and show the main window again """
+        self.close()
+        self.main_window.show()
+    def go_back(self):
+        """Go back to the previous window."""
+        self.close()  # Close the History window
+        if hasattr(self, 'previous_window') and self.previous_window:  # If a previous window is provided
+            self.previous_window.show()  # Show the previous window
+    
 
 class OnScreenKeyboard(QWidget):
     
@@ -349,8 +443,10 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         """)
 
         self.clock_label, self.timer = setup_clock(self)
+        self.date_label = date(self)  # Call the fixed date function
         home_button(self)
         history_button(self)
+
 
         # Dock Selection ComboBox
         self.dock_combo = QComboBox(self)
@@ -419,7 +515,6 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         self.battery_id_list.move(10, 450)
         self.refresh_battery_id_list()  # Populate the list with battery IDs
 
-    
     def close_window(self):
         """ Close this window and show the main window again """
         self.close()
@@ -566,6 +661,7 @@ class DeleteBatteryWindow(QDialog):  # Add battery Window
         """)
 
         self.clock_label, self.timer = setup_clock(self)
+        self.date_label = date(self)  # Call the fixed date function
 
         # Battery ID ComboBox
         self.battery_id_combo = QComboBox(self)
@@ -710,25 +806,9 @@ class IDWindow(QDialog):  # ID Windows
         self.side_bg_widget.setStyleSheet("background-color: rgb(102, 178, 214); border: 2px solid black;")
         self.side_bg_widget.move(0, 0)  
 
-        # Digital Clock Label (Top Left)
-        self.clock_label = QLabel(self)
-        self.clock_label.setFont(QFont("DS Digital", 27, QFont.Bold))
-        self.clock_label.setStyleSheet("""
-            color: white;
-            background-color: #333;
-            border: 2px solid #555;
-            border-radius: 10px;
-            padding: 5px;
-        """)
-        self.clock_label.setAlignment(Qt.AlignCenter)
-        self.clock_label.setFixedSize(230, 60)
-        self.clock_label.move(20, 20)  # Position in the top-left corner
 
-        # Start the clock update timer
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update_time)
-        self.timer.start(1000)  # Update every second
-        self.update_time()  # Update the clock immediately
+        self.date_label = date(self)  # Call the fixed date function
+        self.clock_label, self.timer = setup_clock(self)
 
         # ✅ Dock Status Overview Title
         self.title_label = QLabel(f"{BP_ID} - STATUS OVERVIEW", self)
@@ -825,11 +905,6 @@ class IDWindow(QDialog):  # ID Windows
                 item.setTextAlignment(Qt.AlignCenter)
                 table_widget.setItem(row, col, item)
         return table_widget
-    
-    def update_time(self):
-        """ Updates the digital clock every second. """
-        current_time = QTime.currentTime().toString("hh:mm:ss")
-        self.clock_label.setText(current_time)
 
     def close_window(self):
         """ Close this window and show the main window again """

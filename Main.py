@@ -1,15 +1,13 @@
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-from add_battery_window import *  # Import the AddBatteryWindow
+from Windows import *  # Import the AddBatteryWindow
 
 class MainWindow(QMainWindow): #Main Window
     def __init__(self):
         super().__init__()
         self.setWindowTitle("BATTERY SWAPPING SYSTEM")
-
-        # Window Size
-        self.setFixedSize(1920, 1080)
+        self.setFixedSize(1920, 1080) # window size
 
         # Create a central widget
         central_widget = QWidget(self)
@@ -50,6 +48,7 @@ class MainWindow(QMainWindow): #Main Window
         """)
 
         self.clock_label, self.timer = setup_clock(self)
+        self.date_label = date(self)  # Call the fixed date function
 
         # Table setup
         layout = QVBoxLayout(bg_widget)
@@ -186,7 +185,7 @@ class MainWindow(QMainWindow): #Main Window
         self.battery_image.setPixmap(pixmap)
         self.battery_image.setScaledContents(True)
         self.battery_image.setFixedSize(100, 100)   # Set exact size
-        self.battery_image.move(10, 120)  # Center it below the text
+        self.battery_image.move(10, 150)  # Center it below the text
         self.battery_image.setCursor(Qt.PointingHandCursor)  # Make it show a clickable cursor
         self.battery_image.mousePressEvent = self.add_battery_clicked  # Assign event
 
@@ -196,7 +195,7 @@ class MainWindow(QMainWindow): #Main Window
         self.remove_battery.setStyleSheet("color: black;")
         self.remove_battery.setAlignment(Qt.AlignCenter)
         self.remove_battery.setFixedSize(300, 80)  # Reduce height to fit text only
-        self.remove_battery.move(20, 230)
+        self.remove_battery.move(20, 260)
         self.remove_battery.raise_()
         self.remove_battery.setAttribute(Qt.WA_Hover)
         self.remove_battery.setCursor(Qt.PointingHandCursor)
@@ -208,7 +207,7 @@ class MainWindow(QMainWindow): #Main Window
         self.add_battery.setStyleSheet("color: black;")
         self.add_battery.setAlignment(Qt.AlignCenter)
         self.add_battery.setFixedSize(300, 80)  # Reduce height to fit text only
-        self.add_battery.move(20, 130)
+        self.add_battery.move(20, 160)
         self.add_battery.raise_()
         self.add_battery.setAttribute(Qt.WA_Hover)
         self.add_battery.setCursor(Qt.PointingHandCursor)
@@ -225,7 +224,7 @@ class MainWindow(QMainWindow): #Main Window
         self.remove_image.setPixmap(pixmap)
         self.remove_image.setScaledContents(True)
         self.remove_image.setFixedSize(100, 100)   # Set exact size
-        self.remove_image.move(10, 220)  # Center it below the text
+        self.remove_image.move(10, 250)  # Center it below the text
         self.remove_image.setCursor(Qt.PointingHandCursor)  # Make it show a clickable cursor
         self.remove_image.mousePressEvent = self.remove_battery_clicked  # Assign event
 
