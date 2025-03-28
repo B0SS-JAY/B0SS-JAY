@@ -198,25 +198,41 @@ class HistoryWindow(QDialog):  # History Window
         self.clock_label, self.timer = setup_clock(self)
         self.date_label = date(self)  # Call the fixed date function
 
+
+        # Add a label above the filter_combo
+        filter_label = QLabel("Filter \nBattery ID", self)
+        filter_label.setFont(QFont("Arial", 20, QFont.Bold))
+        filter_label.setAlignment(Qt.AlignCenter)
+        filter_label.setFixedSize(200, 100)
+        filter_label.move(40, 350)  # Position the label above the dropdown
+        # Filter Battery ID
+        self.filter_combo = QComboBox(self)
+        self.filter_combo.setFont(QFont("Arial", 20))
+        self.filter_combo.setFixedSize(200, 50)
+        self.filter_combo.move(40, 450)  
+        self.filter_combo.addItem("All Batteries") 
+        self.populate_battery_ids()  
+        self.filter_combo.currentIndexChanged.connect(self.filter_history) 
+
         # Add a table to display history data
         self.history_table = QTableWidget(self)
-        self.history_table.setRowCount(10)  # Example: 10 rows
-        self.history_table.setColumnCount(3)  # Example: 3 columns
+        self.history_table.setRowCount(10)  
+        self.history_table.setColumnCount(3)  
         self.history_table.setHorizontalHeaderLabels(["DATE AND \nTIME", "OPERATION", "DETAILS"])
         self.history_table.horizontalHeader().setStretchLastSection(True)
         self.history_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.history_table.setFont(QFont("Arial", 15))
         self.history_table.setFixedSize(1600, 700)
-        self.history_table.move(300, 130)  # Position the table in the center
+        self.history_table.move(300, 130)  
         self.history_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.history_table.setSelectionMode(QAbstractItemView.NoSelection)
-        self.history_table.verticalHeader().setDefaultSectionSize(100)  # Adjust row height
-        self.history_table.horizontalHeader().setDefaultSectionSize(161)  # Adjust column width
+        self.history_table.verticalHeader().setDefaultSectionSize(100)  
+        self.history_table.horizontalHeader().setDefaultSectionSize(161) 
 
         # Hide the vertical header (row numbers)
         self.history_table.verticalHeader().setVisible(False)
 
-        # Style the header using QStyleSheet
+        # Header style
         self.history_table.setStyleSheet("""
                 QTableWidget {
                     border: 3px solid black;
@@ -240,8 +256,8 @@ class HistoryWindow(QDialog):  # History Window
 
         # Add sample data to the table
         self.populate_table()
-        
-         # Add a "Back" button
+
+        # Add a "Back" button
         back_button = QPushButton("Back", self)
         back_button.setFont(QFont("Arial", 20))
         back_button.setIcon(QIcon(r"C:\Users\jayro\Desktop\BATTERY SWAPING FILES\back.png"))  # Set the path to your home icon
@@ -251,11 +267,28 @@ class HistoryWindow(QDialog):  # History Window
         back_button.clicked.connect(self.go_back)  # Connect to the back function
         home_button(self)
 
-    def populate_table(self):
+    def populate_battery_ids(self):
+        """Populate the dropdown with battery IDs from the database."""
+        conn = sqlite3.connect('batteries.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT DISTINCT battery_id FROM history')
+        battery_ids = [row[0] for row in cursor.fetchall()]
+        conn.close()
+
+        # Add battery IDs to the dropdown
+        self.filter_combo.addItems(battery_ids)
+
+    def populate_table(self, battery_id=None):
         """Populate the table with data from the history table."""
         conn = sqlite3.connect('batteries.db')
         cursor = conn.cursor()
-        cursor.execute('SELECT timestamp, operation, battery_id FROM history ORDER BY id DESC')
+
+        # Filter by battery ID if provided
+        if battery_id and battery_id != "All Batteries":
+            cursor.execute('SELECT timestamp, operation, battery_id FROM history WHERE battery_id = ? ORDER BY id DESC', (battery_id,))
+        else:
+            cursor.execute('SELECT timestamp, operation, battery_id FROM history ORDER BY id DESC')
+
         history_data = cursor.fetchall()
         conn.close()
 
@@ -263,14 +296,33 @@ class HistoryWindow(QDialog):  # History Window
 
         for row, data in enumerate(history_data):
             for col, value in enumerate(data):
-                item = QTableWidgetItem(value)
+                if col == 0:  # Format the timestamp column
+                    date_time = value.split(" ")  # Split into date and time
+                    formatted_value = f"{date_time[0]}\n{date_time[1]}"  # Add newline between date and time
+                    item = QTableWidgetItem(formatted_value)
+                else:
+                    item = QTableWidgetItem(value)
                 item.setTextAlignment(Qt.AlignCenter)
                 self.history_table.setItem(row, col, item)
 
+    def filter_history(self):
+        """Filter the history table based on the selected battery ID."""
+        selected_battery_id = self.filter_combo.currentText()
+        self.populate_table(selected_battery_id)
+
     def close_window(self):
-        """ Close this window and show the main window again """
-        self.close()
-        self.main_window.show()
+            """Close AddBatteryWindow and restore MainWindow."""
+            print(f"Closing {self.__class__.__name__}...")  
+            if self.main_window:
+                print(f"Main Window ({self.main_window.__class__.__name__}) found, showing it now.")
+                self.main_window.show()
+                self.main_window.raise_()
+                self.main_window.activateWindow()
+            else:
+                print("⚠️ Main Window reference is None! Something went wrong.")
+            self.close()
+
+
     def go_back(self):
         """Go back to the previous window."""
         self.close()  # Close the History window
@@ -526,9 +578,11 @@ class AddBatteryWindow(QDialog):  # Add battery Window
         self.refresh_battery_id_list()  # Populate the list with battery IDs
 
     def close_window(self):
-        """ Close this window and show the main window again """
-        self.close()
-        self.main_window.show()
+        """Close this window and return to the Main Menu"""
+        self.close()  # Close the AddBatteryWindow
+        if self.main_window:  # Ensure the MainWindow reference exists
+            self.main_window.show()  # Show the Main Menu (MainWindow)
+
     
     def open_history_window(self):
         """Open the History window."""
